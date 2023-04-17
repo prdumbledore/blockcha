@@ -20,7 +20,8 @@ java -jar blockChain-0.0.1.jar 8082 8080 8081 0
 
 ## Docker
 ```
-docker build -t blockСhain.
+docker build -t prdumbledore/blockchain.
+docker-compose up
 ```
 
 ## Test
