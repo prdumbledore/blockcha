@@ -1,6 +1,5 @@
-FROM ubuntu
-RUN mkdir /blockchain
-ADD . /blockchain
-RUN apt-get update && apt-get install -y openjdk-11-jdk openjdk-11-jre
-RUN cd /blockchain &&\
-	./gradlew JarBuildrun.bat/run.sh
+FROM openjdk:11
+RUN mkdir /block
+ADD . /block
+RUN apt-get update && apt-get install dos2unix
+RUN cd /block && dos2unix gradlew && ./gradlew JarBuild
