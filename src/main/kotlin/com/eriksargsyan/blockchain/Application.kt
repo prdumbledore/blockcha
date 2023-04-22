@@ -7,19 +7,18 @@ import com.eriksargsyan.blockchain.Vars.node2Port
 import com.eriksargsyan.blockchain.Vars.repository
 import com.eriksargsyan.blockchain.Vars.url1
 import com.eriksargsyan.blockchain.Vars.url2
+import com.eriksargsyan.blockchain.data.Blockchain.blockchain
 import com.eriksargsyan.blockchain.data.Blockchain.generateGenesis
 import com.eriksargsyan.blockchain.data.NotificationReceivedCallback
 import com.eriksargsyan.blockchain.data.Repository
 import com.eriksargsyan.blockchain.data.Repository.Companion.generateNewBlock
 import com.eriksargsyan.blockchain.data.Repository.Companion.validateBlockChain
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
 import com.eriksargsyan.blockchain.plugins.*
-import com.eriksargsyan.blockchain.util.Constants
+import io.ktor.server.application.*
 import io.ktor.server.cio.*
+import io.ktor.server.engine.*
 import kotlinx.coroutines.*
 import java.net.ConnectException
-import com.eriksargsyan.blockchain.data.Blockchain.blockchain
 
 
 fun main(args: Array<String>) {
@@ -33,10 +32,19 @@ fun main(args: Array<String>) {
     embeddedServer(CIO, port = currentNodePort.toInt(), host = "0.0.0.0", module = Application::module)
         .start(wait = true)
 }
+
 fun Application.module() {
     configureSerialization()
-    url1 = "${Constants.BASE_URL}$node1Port"
-    url2 = "${Constants.BASE_URL}$node2Port"
+    url1 = when (node1Port) {
+        "8081" -> "http://server2:8081"
+        "8082" -> "http://server3:8082"
+        else -> "http://server1:8080"
+    }
+    url2  = when (node2Port) {
+        "8081" -> "http://server2:8081"
+        "8082" -> "http://server3:8082"
+        else -> "http://server1:8080"
+    }
 
     if (mainNode) {
         generateGenesis()
@@ -62,7 +70,7 @@ fun Application.module() {
 }
 
 private fun startMining(coroutineScope: CoroutineScope): Job {
-    return coroutineScope.launch(Dispatchers.Default) {
+    return coroutineScope.launch(Dispatchers.Default + CoroutineExceptionHandler { _, _ ->  }) {
         while (true) {
 
             repository.generateNewBlock()
@@ -71,7 +79,7 @@ private fun startMining(coroutineScope: CoroutineScope): Job {
 }
 
 private fun waitForMainNode(coroutineScope: CoroutineScope): Job {
-    return coroutineScope.launch(Dispatchers.IO) {
+    return coroutineScope.launch(Dispatchers.IO + CoroutineExceptionHandler { _, _ ->  }) {
         while (blockchain.isEmpty()) {
             try {
                 repository.validateBlockChain()
